@@ -15,8 +15,8 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
 SNAKE_SIZE = 20
-snake_pos = [100, 50]  # Initial position of the snake (x, y)
-snake_body = [[100, 50], [80, 50], [60, 50]]  # Initial body
+snake_pos = [100.0, 50.0]  # Use float positions for smooth movement
+snake_body = [[100.0, 50.0], [80.0, 50.0], [60.0, 50.0]]  # Initial body positions (floating point)
 snake_direction = "RIGHT"
 speed = 10
 
@@ -29,7 +29,9 @@ def spawn_food():
 food_pos = spawn_food()
 food_spawn = True
 
-# Clock to control game speed
+score = 0
+font = pygame.font.SysFont("Arial", 24)
+
 clock = pygame.time.Clock()
 
 def game_over():
@@ -52,29 +54,34 @@ while running:
     if keys[pygame.K_RIGHT] and snake_direction != "LEFT":
         snake_direction = "RIGHT"
 
+    target_x, target_y = snake_pos[0], snake_pos[1]
     if snake_direction == "UP":
-        snake_pos[1] -= SNAKE_SIZE
+        target_y -= SNAKE_SIZE
     if snake_direction == "DOWN":
-        snake_pos[1] += SNAKE_SIZE
+        target_y += SNAKE_SIZE
     if snake_direction == "LEFT":
-        snake_pos[0] -= SNAKE_SIZE
+        target_x -= SNAKE_SIZE
     if snake_direction == "RIGHT":
-        snake_pos[0] += SNAKE_SIZE
+        target_x += SNAKE_SIZE
+
+    snake_pos[0] += (target_x - snake_pos[0]) * 0.1
+    snake_pos[1] += (target_y - snake_pos[1]) * 0.1
+
+    snake_head_rect = pygame.Rect(round(snake_pos[0]), round(snake_pos[1]), SNAKE_SIZE, SNAKE_SIZE)
 
     if (
         snake_pos[0] < 0 or snake_pos[0] >= SCREEN_WIDTH or
         snake_pos[1] < 0 or snake_pos[1] >= SCREEN_HEIGHT
     ):
-        print("Game Over! The snake hit the wall.")
+        print(f"Game Over! Final Score: {score}")
         game_over()
 
-    snake_body.insert(0, list(snake_pos))
+    snake_body.insert(0, [snake_pos[0], snake_pos[1]])
 
-    snake_head_rect = pygame.Rect(snake_pos[0], snake_pos[1], SNAKE_SIZE, SNAKE_SIZE)
     food_rect = pygame.Rect(food_pos[0], food_pos[1], SNAKE_SIZE, SNAKE_SIZE)
-
     if snake_head_rect.colliderect(food_rect):
-        print("Food eaten!")
+        speed += 1.5
+        score += 1
         food_spawn = False
     else:
         snake_body.pop()
@@ -85,7 +92,7 @@ while running:
 
     for segment in snake_body[1:]:
         if snake_pos[0] == segment[0] and snake_pos[1] == segment[1]:
-            print("Game Over! The snake collided with itself.")
+            print(f"Game Over! Final Score: {score}")
             game_over()
 
     screen.fill(BLACK)
@@ -94,6 +101,9 @@ while running:
         pygame.draw.rect(screen, GREEN, pygame.Rect(segment[0], segment[1], SNAKE_SIZE, SNAKE_SIZE))
 
     pygame.draw.rect(screen, RED, pygame.Rect(food_pos[0], food_pos[1], SNAKE_SIZE, SNAKE_SIZE))
+
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, [10, 10])  # Draw score at the top left
 
     pygame.display.flip()
 
